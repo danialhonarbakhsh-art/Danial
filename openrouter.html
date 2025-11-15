@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تست OpenRouter + Grok (با کلید)</title>
+    <style>
+        body { font-family: Tahoma; text-align: center; margin: 60px; background: #f0f8ff; }
+        input, button { padding: 12px; margin: 10px; font-size: 16px; border-radius: 5px; }
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; color: #27ae60; font-weight: bold; padding: 20px; background: white; border-radius: 10px; border-left: 5px solid #1a73e8; }
+        #tokens { color: #7f8c8d; font-size: 12px; margin-top: 10px; }
+        .error { color: red; border-left-color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>تست Grok با OpenRouter (کلید فعال) 🚀</h1>
+    <p>اسمت رو بنویس، Grok تحلیل کنه (تا ۱۰ میلیون توکن رایگان!)</p>
+    <input id="nameInput" placeholder="اسمت رو بنویس...">
+    <br>
+    <button onclick="askGrok()">بپرس از Grok</button>
+    <div id="result"></div>
+    <div id="tokens"></div>
+
+    <script>
+        async function askGrok() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) { alert('اسم رو بنویس!'); return; }
+
+            const resultDiv = document.getElementById('result');
+            const tokensDiv = document.getElementById('tokens');
+            resultDiv.innerHTML = 'در حال فکر... (Grok-3 Mini)';
+            resultDiv.className = '';
+            tokensDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer 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',
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'Danial AI Lab'
+                    },
+                    body: JSON.stringify({
+                        model: 'x-ai/grok-3-mini',
+                        messages: [
+                            { role: 'system', content: 'تو تحلیل‌گر اسامی. معنی، ریشه، حس و حال رو بگو. کوتاه و جذاب.' },
+                            { role: 'user', content: `اسم "${name}" رو تحلیل کن.` }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+
+                const data = await response.json();
+                console.log('پاسخ:', data);
+
+                if (data.choices && data.choices[0]) {
+                    resultDiv.innerHTML = `<strong>تحلیل Grok:</strong><br>${data.choices[0].message.content}`;
+                    resultDiv.className = 'success';
+                    if (data.usage) {
+                        tokensDiv.innerHTML = `توکن‌ها: Input ${data.usage.prompt_tokens} + Output ${data.usage.completion_tokens} = ${data.usage.total_tokens} (رایگان!)`;
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = '<strong>خطا:</strong> ' + (data.error?.message || 'مشکل در API');
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = '<strong>خطا:</strong> ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
